@@ -46,12 +46,12 @@ def test_sorted_comment(client, news, comment_list):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-        'name',
-        (
-            (pytest.lazy_fixture('author_client')),
-            (pytest.lazy_fixture('client')),
-        ),
-    )
+    'name',
+    (
+        (pytest.lazy_fixture('author_client')),
+        (pytest.lazy_fixture('client')),
+    ),
+)
 def test_get_form_avtirized(name, news, client):
     """
     Проверка, что анонимному пользователю недоступна форма для отправки

@@ -29,19 +29,19 @@ def test_for_anonymous_user(client, name, args):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-        'name, args',
-        (
-            ('news:delete', pytest.lazy_fixture('comment')),
-            ('news:edit', pytest.lazy_fixture('comment')),
-        ),
-    )
+    'name, args',
+    (
+        ('news:delete', pytest.lazy_fixture('comment')),
+        ('news:edit', pytest.lazy_fixture('comment')),
+    ),
+)
 @pytest.mark.parametrize(
-        'faice, result',
-        (
-            (pytest.lazy_fixture('author_client'), HTTPStatus.OK),
-            (pytest.lazy_fixture('not_author_client'), HTTPStatus.NOT_FOUND),
-        ),
-    )
+    'faice, result',
+    (
+        (pytest.lazy_fixture('author_client'), HTTPStatus.OK),
+        (pytest.lazy_fixture('not_author_client'), HTTPStatus.NOT_FOUND),
+    ),
+)
 def test_update_delete_comment_author(name, args, faice, result):
     """
     Проверка, что страницы удаления и редактирования комментария доступны
@@ -55,12 +55,12 @@ def test_update_delete_comment_author(name, args, faice, result):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-        'name, args',
-        (
-            ('news:delete', pytest.lazy_fixture('comment')),
-            ('news:edit', pytest.lazy_fixture('comment')),
-        ),
-    )
+    'name, args',
+    (
+        ('news:delete', pytest.lazy_fixture('comment')),
+        ('news:edit', pytest.lazy_fixture('comment')),
+    ),
+)
 def test_redirect_anonimous(name, args, client):
     """
     Проверка, что при попытке перейти на страницу редактирования или

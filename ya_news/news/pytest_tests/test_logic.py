@@ -10,12 +10,12 @@ from news.models import Comment
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-        'name, result',
-        (
-            (pytest.lazy_fixture('author_client'), 1),
-            (pytest.lazy_fixture('client'), 0),
-        ),
-    )
+    'name, result',
+    (
+        (pytest.lazy_fixture('author_client'), 1),
+        (pytest.lazy_fixture('client'), 0),
+    ),
+)
 def test_comment_create_author_client_and_cant_anonymous(name, result, news):
     """
     Проверка, что анонимный пользователь не может отправить комментарий,
@@ -31,12 +31,12 @@ def test_comment_create_author_client_and_cant_anonymous(name, result, news):
 
 
 @pytest.mark.parametrize(
-        'name, result',
-        (
-            (pytest.lazy_fixture('author_client'), 0),
-            (pytest.lazy_fixture('not_author_client'), 1),
-        ),
-    )
+    'name, result',
+    (
+        (pytest.lazy_fixture('author_client'), 0),
+        (pytest.lazy_fixture('not_author_client'), 1),
+    ),
+)
 def test_author_can_delete_our_comment_and_cant_other(name, result, comment):
     """
     Проверка, что авторизованный пользователь может удалять свои
@@ -47,11 +47,11 @@ def test_author_can_delete_our_comment_and_cant_other(name, result, comment):
 
 
 @pytest.mark.parametrize(
-        'name, result',
-        (
-            (pytest.lazy_fixture('author_client'), 'Новый коментарий'),
-            (pytest.lazy_fixture('not_author_client'), TEXT_COMMENT),
-        ),
+    'name, result',
+    (
+        (pytest.lazy_fixture('author_client'), 'Новый коментарий'),
+        (pytest.lazy_fixture('not_author_client'), TEXT_COMMENT),
+    ),
 )
 def test_author_can_edit_our_comment_and_cant_other(name, result, comment):
     """
