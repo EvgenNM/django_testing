@@ -1,18 +1,10 @@
-
-from django.contrib.auth import get_user_model
 from django.conf import settings
-from django.test import TestCase
-from django.urls import reverse
-from datetime import datetime, timedelta
+from datetime import timedelta
 from django.utils import timezone
-
-from news.models import Comment, News
-from news.forms import CommentForm
-import pytest
-
 from django.test.client import Client
 
 from news.models import Comment, News
+import pytest
 
 
 TODAY = timezone.now()
@@ -41,6 +33,7 @@ def not_author_client(not_author):
     client = Client()
     client.force_login(not_author)
     return client
+
 
 @pytest.fixture
 def news():

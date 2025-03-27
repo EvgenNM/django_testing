@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 import pytest
@@ -16,7 +15,7 @@ from news.models import Comment
             (pytest.lazy_fixture('author_client'), 1),
             (pytest.lazy_fixture('client'), 0),
         ),
-)
+    )
 def test_comment_create_author_client_and_cant_anonymous(name, result, news):
     """
     Проверка, что анонимный пользователь не может отправить комментарий,
@@ -37,7 +36,7 @@ def test_comment_create_author_client_and_cant_anonymous(name, result, news):
             (pytest.lazy_fixture('author_client'), 0),
             (pytest.lazy_fixture('not_author_client'), 1),
         ),
-)
+    )
 def test_author_can_delete_our_comment_and_cant_other(name, result, comment):
     """
     Проверка, что авторизованный пользователь может удалять свои

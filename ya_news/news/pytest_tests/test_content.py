@@ -6,12 +6,9 @@ from news.forms import CommentForm
 from news.models import News
 
 
-
 @pytest.mark.django_db
 def test_news_count(client, news_list, news):
-    """
-    Проверка, что оличество новостей на главной странице — не более 10.
-    """
+    """Проверка, что оличество новостей на главной странице — не более 10."""
     value = settings.NEWS_COUNT_ON_HOME_PAGE
     response = client.get(reverse('news:home'))
     home_list = response.context['object_list']
@@ -54,7 +51,7 @@ def test_sorted_comment(client, news, comment_list):
             (pytest.lazy_fixture('author_client')),
             (pytest.lazy_fixture('client')),
         ),
-)
+    )
 def test_get_form_avtirized(name, news, client):
     """
     Проверка, что анонимному пользователю недоступна форма для отправки

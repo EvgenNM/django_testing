@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from http import HTTPStatus
 
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -42,9 +41,7 @@ class TestLogic(TestCase):
         cls.reverse_url = reverse('notes:add')
 
     def test_create_notes_autorized(self):
-        """
-        Проверка, что залогиненный пользователь может создать заметку.
-        """
+        """Проверка, что залогиненный пользователь может создать заметку."""
         self.author_client.post(self.reverse_url, data=self.form_data)
         self.assertEqual(Note.objects.count(), 2)
         note = Note.objects.get(pk=2)
@@ -54,21 +51,15 @@ class TestLogic(TestCase):
         self.assertEqual(note.author, self.author)
 
     def test_create_notes_anonimus(self):
-        """
-        Проверка, что анонимный пользователь не может создать заметку.
-        """
+        """Проверка, что анонимный пользователь не может создать заметку."""
         self.client.post(self.reverse_url, data=self.form_data)
         self.assertEqual(Note.objects.count(), 1)
 
     def test_unique_slug(self):
-        """
-        Проверка, что невозможно создать две заметки с одинаковым slug.
-        """
+        """Проверка, что невозможно создать две заметки с одинаковым slug."""
         self.author_client.post(self.reverse_url, data=self.form_data)
         self.assertEqual(Note.objects.count(), 2)
-        self.author_client.post(
-            self.reverse_url, data=self.new_form_data
-        )
+        self.author_client.post(self.reverse_url, data=self.new_form_data)
         self.assertEqual(Note.objects.get(pk=2).title, 'Заголовок')
         self.assertEqual(Note.objects.count(), 2)
 
