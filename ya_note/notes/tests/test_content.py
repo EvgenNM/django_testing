@@ -5,9 +5,6 @@ from notes.tests.base_test_class import BaseTestClass
 class TestContent(BaseTestClass):
     """Тестирование сонтента."""
 
-    HOMEPAGE = 'notes:list'
-
-
     def test_notes_object_list(self):
         """
         Проверка, что отдельная заметка передаётся на страницу
@@ -33,6 +30,10 @@ class TestContent(BaseTestClass):
             response_author.context['object_list'].get(pk=1).author,
             self.author
         )
+        # Или тут такое добавить?
+        # for note in response_author.context['object_list']:
+        #     with self.subTest(note=note, author=self.author):
+        #         self.assertEqual(note.author, self.author)
         self.assertEqual(response_reader.context['object_list'].count(), 0)
 
         # Или в варианте, что ниже надо изложить?
@@ -48,6 +49,8 @@ class TestContent(BaseTestClass):
                     response.get().author,
                     self.author
                 ) if author else self.assertEqual(response.count(), 0)
+        # Или в тесте необходимо наглядно создать объект заметки
+        # с соответствующим автором?
 
     def test_create_edit_notes(self):
         """
