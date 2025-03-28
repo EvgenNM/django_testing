@@ -2,8 +2,8 @@ from django.urls import reverse
 
 from pytils.translit import slugify
 
-from notes.models import Note
 from notes.forms import WARNING
+from notes.models import Note
 from notes.tests.base_test_class import BaseTestClass
 
 
@@ -62,7 +62,7 @@ class TestLogic(BaseTestClass):
     def test_create_notes_autorized(self):
         """Проверка, что залогиненный пользователь может создать заметку."""
         Note.objects.all().delete()
-        self.author_client.post(self.reverse_url, data=self.form_data)
+        self.create_author_form_date()
         self.assertEqual(Note.objects.count(), 1)
         note = Note.objects.get()
 
