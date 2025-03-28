@@ -1,12 +1,7 @@
-from django.contrib.auth import get_user_model
-from django.test import TestCase
 from django.urls import reverse
 from http import HTTPStatus
 
-from notes.models import Note
 from notes.tests.base_test_class import BaseTestClass
-
-User = get_user_model()
 
 
 class TestRoutes(BaseTestClass):
@@ -52,7 +47,7 @@ class TestRoutes(BaseTestClass):
         for name, status in users_statuses:
             for url in self.list_urls_note:
                 with self.subTest(name=name, status=status, url=url):
-                    response = self.client.get(url)
+                    response = name.get(url)
                     self.assertEqual(response.status_code, status)
 
     def test_acces_authorized_user(self):
