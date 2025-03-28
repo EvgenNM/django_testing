@@ -1,65 +1,60 @@
-from django.contrib.auth import get_user_model
-
-from django.test import Client, TestCase
-from django.urls import reverse
-
-from notes.models import Note
 from notes.forms import NoteForm
+from notes.tests.base_test_class import BaseTestClass
 
-User = get_user_model()
 
-
-class TestContent(TestCase):
+class TestContent(BaseTestClass):
     """Тестирование сонтента."""
 
     HOMEPAGE = 'notes:list'
 
-    @classmethod
-    def setUpTestData(cls):
-        cls.author = User.objects.create(username='Лев Толстой')
-        cls.reader = User.objects.create(username='Читатель простой')
-        cls.note = Note.objects.create(
-            title='Заголовок',
-            text='Текст',
-            author=cls.author,
-        )
-        cls.author_client = Client()
-        cls.reader_client = Client()
-        cls.author_client.force_login(cls.author)
-        cls.reader_client.force_login(cls.reader)
 
     def test_notes_object_list(self):
         """
         Проверка, что отдельная заметка передаётся на страницу
         со списком заметок в списке object_list в словаре context.
         """
-        response = self.author_client.get(reverse(self.HOMEPAGE))
-        self.assertIn('object_list', response.context)
+        response = self.author_client.get(self.notes_list_reverse)
+        self.assertIn(self.note, response.context['object_list'])
 
     def test_unique_notes(self):
         """
         Проверка, что в список заметок одного пользователя
         не попадают заметки другого пользователя.
         """
-        url = reverse(self.HOMEPAGE)
-        response_author = self.author_client.get(url)
-        response_reader = self.reader_client.get(url)
-        self.assertEqual(response_author.context['object_list'].count(), 1)
-        self.assertNotEqual(
-            response_author.context['object_list'].count(),
-            response_reader.context['object_list'].count()
+        # Получаем объекты response при get-запросе на страницу списка заметок
+        # авторизованных юзеров.
+        # в BaseTestClass  создана одна заметка, где автор self.author:
+        # в списке первого (author_client) объекта должна быть одна заметка,
+        # т.к. он ее автор
+        response_author = self.author_client.get(self.notes_list_reverse)
+        # в списке второго (reader_client) объекта не должно быть заметок
+        response_reader = self.reader_client.get(self.notes_list_reverse)
+        self.assertEqual(
+            response_author.context['object_list'].get(pk=1).author,
+            self.author
         )
+        self.assertEqual(response_reader.context['object_list'].count(), 0)
+
+        # Или в варианте, что ниже надо изложить?
+        for user, author in [
+            (self.author_client, True),
+            (self.reader_client, False)
+        ]:
+            with self.subTest(user=user, author=author):
+                response = user.get(
+                    self.notes_list_reverse
+                ).context['object_list']
+                self.assertEqual(
+                    response.get().author,
+                    self.author
+                ) if author else self.assertEqual(response.count(), 0)
 
     def test_create_edit_notes(self):
         """
         Проверка, что на страницы создания и редактирования
         заметки передаются формы.
         """
-        urls = [
-            reverse('notes:add'),
-            reverse('notes:edit', kwargs={'slug': self.note.slug})
-        ]
-        for url in urls:
+        for url in self.url_notes_add_eddit_response:
             with self.subTest(url=url):
                 response = self.author_client.get(url)
                 self.assertIn('form', response.context)

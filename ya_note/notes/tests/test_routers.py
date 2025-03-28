@@ -1,4 +1,3 @@
-from django.urls import reverse
 from http import HTTPStatus
 
 from notes.tests.base_test_class import BaseTestClass
@@ -13,9 +12,8 @@ class TestRoutes(BaseTestClass):
         а также страницы регистрации пользователей,
         входа в учётную запись и выхода из неё.
         """
-        for name in self.urls_home_login_logout_signup:
-            with self.subTest(name=name):
-                url = reverse(name)
+        for url in self.urls_home_login_logout_signup_reverse:
+            with self.subTest(url=url):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
 
@@ -27,10 +25,9 @@ class TestRoutes(BaseTestClass):
         страницу добавления заметки, отдельной заметки,
         редактирования или удаления заметки.
         """
-        login_url = reverse(self.login_url)
         for url in self.list_urls_note + self.list_urls_for_authorized:
             with self.subTest(url=url):
-                redirect_url = f'{login_url}?next={url}'
+                redirect_url = f'{self.login_url_reverse}?next={url}'
                 response = self.client.get(url)
                 self.assertRedirects(response, redirect_url)
 

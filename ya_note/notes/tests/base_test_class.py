@@ -36,10 +36,15 @@ class BaseTestClass(TestCase):
             reverse('notes:success'),
             reverse('notes:add'),
         ]
-        cls.urls_home_login_logout_signup = (
-            'notes:home',
-            'users:login',
-            'users:logout',
-            'users:signup',
+        cls.urls_home_login_logout_signup_reverse = (
+            reverse('notes:home'),
+            reverse('users:login'),
+            reverse('users:logout'),
+            reverse('users:signup'),
         )
-        cls.login_url = 'users:login'
+        cls.url_notes_add_eddit_response = (
+            reverse('notes:add'),
+            reverse('notes:edit', kwargs={'slug': cls.note.slug})
+        )
+        cls.login_url_reverse = reverse('users:login')
+        cls.notes_list_reverse = reverse('notes:list')
