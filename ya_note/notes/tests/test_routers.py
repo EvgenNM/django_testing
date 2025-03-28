@@ -1,37 +1,16 @@
 from django.contrib.auth import get_user_model
-from http import HTTPStatus
-
 from django.test import TestCase
 from django.urls import reverse
+from http import HTTPStatus
 
 from notes.models import Note
+from notes.tests.base_test_class import BaseTestClass
 
 User = get_user_model()
 
 
-class TestRoutes(TestCase):
+class TestRoutes(BaseTestClass):
     """Проверка маршрутов приложения."""
-
-    @classmethod
-    def setUpTestData(cls):
-        cls.author = User.objects.create(username='Лев Толстой')
-        cls.reader = User.objects.create(username='Читатель простой')
-        cls.note = Note.objects.create(
-            title='Заголовок',
-            text='Текст',
-            author=cls.author,
-        )
-        slug = {'slug': cls.note.slug}
-        cls.list_urls_note = [
-            reverse('notes:detail', kwargs=slug),
-            reverse('notes:edit', kwargs=slug),
-            reverse('notes:delete', kwargs=slug),
-        ]
-        cls.list_urls_for_authorized = [
-            reverse('notes:list'),
-            reverse('notes:success'),
-            reverse('notes:add'),
-        ]
 
     def test_pages_availability(self):
         """
@@ -39,13 +18,7 @@ class TestRoutes(TestCase):
         а также страницы регистрации пользователей,
         входа в учётную запись и выхода из неё.
         """
-        urls = (
-            'notes:home',
-            'users:login',
-            'users:logout',
-            'users:signup',
-        )
-        for name in urls:
+        for name in self.urls_home_login_logout_signup:
             with self.subTest(name=name):
                 url = reverse(name)
                 response = self.client.get(url)
@@ -59,7 +32,7 @@ class TestRoutes(TestCase):
         страницу добавления заметки, отдельной заметки,
         редактирования или удаления заметки.
         """
-        login_url = reverse('users:login')
+        login_url = reverse(self.login_url)
         for url in self.list_urls_note + self.list_urls_for_authorized:
             with self.subTest(url=url):
                 redirect_url = f'{login_url}?next={url}'
@@ -73,11 +46,10 @@ class TestRoutes(TestCase):
         указанных страниц иному зарегистрированному пользователю.
         """
         users_statuses = (
-            (self.author, HTTPStatus.OK),
-            (self.reader, HTTPStatus.NOT_FOUND),
+            (self.author_client, HTTPStatus.OK),
+            (self.reader_client, HTTPStatus.NOT_FOUND),
         )
         for name, status in users_statuses:
-            self.client.force_login(name)
             for url in self.list_urls_note:
                 with self.subTest(name=name, status=status, url=url):
                     response = self.client.get(url)
@@ -90,7 +62,6 @@ class TestRoutes(TestCase):
         добавления новой заметки.
         """
         for url in self.list_urls_for_authorized:
-            self.client.force_login(self.reader)
             with self.subTest(url=url):
-                response = self.client.get(url)
+                response = self.reader_client.get(url)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
