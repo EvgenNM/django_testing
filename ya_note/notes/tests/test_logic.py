@@ -57,7 +57,7 @@ class TestLogic(BaseTestClass):
             self.reverse_url,
             data=self.form_data
         )
-        return Note.objects.get(pk=Note.objects.count())
+        return Note.objects.all().last()
     
     def create_anonimous_form_data(self):
         """
@@ -111,9 +111,8 @@ class TestLogic(BaseTestClass):
         не может удалять чужие.
         """
         not_note_reader = Note.objects.all().last()
-        self.create_reader_form_data()
+        note_reader = self.create_reader_form_data()
         create_count = Note.objects.count()
-        note_reader = Note.objects.all().last()
         test_urls = [
             (self.url_delete, not_note_reader.slug, create_count),
             (self.url_delete, note_reader.slug, create_count - 1),

@@ -30,27 +30,11 @@ class TestContent(BaseTestClass):
             response_author.context['object_list'].get(pk=1).author,
             self.author
         )
-        # Или тут такое добавить?
+        # Или?
         # for note in response_author.context['object_list']:
         #     with self.subTest(note=note, author=self.author):
         #         self.assertEqual(note.author, self.author)
         self.assertEqual(response_reader.context['object_list'].count(), 0)
-
-        # Или в варианте, что ниже надо изложить?
-        for user, author in [
-            (self.author_client, True),
-            (self.reader_client, False)
-        ]:
-            with self.subTest(user=user, author=author):
-                response = user.get(
-                    self.notes_list_reverse
-                ).context['object_list']
-                self.assertEqual(
-                    response.get().author,
-                    self.author
-                ) if author else self.assertEqual(response.count(), 0)
-        # Или в тесте необходимо наглядно создать объект заметки
-        # с соответствующим автором?
 
     def test_create_edit_notes(self):
         """
