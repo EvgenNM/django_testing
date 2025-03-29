@@ -1,59 +1,72 @@
 from http import HTTPStatus
+
 from django.urls import reverse
 
 import pytest
 from pytest_django.asserts import assertRedirects
 
 
-@pytest.mark.django_db
+pytestmark = pytest.mark.django_db
+
+
+# Если не в том направлении двигаюсь,
+# можно раскрыть шире и детальнее свои желания. Спасибо
 @pytest.mark.parametrize(
-    'name, args',
+    'name',
     (
-        ('news:home', None),
-        ('news:detail', pytest.lazy_fixture('news')),
-        ('users:login', None),
-        ('users:logout', None),
-        ('users:signup', None),
-    ),
+        pytest.lazy_fixture('reverse_news_home'),
+        pytest.lazy_fixture('news_pk_reverse'),
+        reverse('users:login'),
+        reverse('users:logout'),
+        reverse('users:signup'),
+    )
 )
-def test_for_anonymous_user(client, name, args):
+def test_for_anonymous_user(client, name):
     """
     Проверка, что главная страница, страница отдельной новости доступна
     анонимному пользователю, а также страницы регистрации пользователей,
     входа в учётную запись и выхода из неё доступны всем пользователям.
     """
-    url = reverse(name, args=(args.pk,) if args else args)
-    response = client.get(url)
+    response = client.get(name)
     assert response.status_code == HTTPStatus.OK
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize(
-    'name, args',
+    'faice, url, result',
     (
-        ('news:delete', pytest.lazy_fixture('comment')),
-        ('news:edit', pytest.lazy_fixture('comment')),
+        (
+            pytest.lazy_fixture('not_author_client'),
+            pytest.lazy_fixture('reverse_comment_edit'),
+            HTTPStatus.NOT_FOUND
+        ),
+        (
+            pytest.lazy_fixture('author_client'),
+            pytest.lazy_fixture('reverse_comment_edit'),
+            HTTPStatus.OK
+        ),
+        (
+            pytest.lazy_fixture('not_author_client'),
+            pytest.lazy_fixture('reverse_comment_delete'),
+            HTTPStatus.NOT_FOUND
+        ),
+        (
+            pytest.lazy_fixture('author_client'),
+            pytest.lazy_fixture('reverse_comment_delete'),
+            HTTPStatus.OK
+        ),
     ),
 )
-@pytest.mark.parametrize(
-    'faice, result',
-    (
-        (pytest.lazy_fixture('author_client'), HTTPStatus.OK),
-        (pytest.lazy_fixture('not_author_client'), HTTPStatus.NOT_FOUND),
-    ),
-)
-def test_update_delete_comment_author(name, args, faice, result):
+def test_update_delete_comment_author(faice, url, result):
     """
     Проверка, что страницы удаления и редактирования комментария доступны
     автору комментария, а также что авторизованный пользователь не может зайти
     на страницы редактирования или удаления чужих комментариев
     (возвращается ошибка 404).
     """
-    response = faice.get(reverse(name, args=(args.pk,)))
+    response = faice.get(url)
     assert response.status_code == result
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize(
     'name, args',
     (

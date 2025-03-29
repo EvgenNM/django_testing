@@ -1,10 +1,13 @@
-from django.conf import settings
 from datetime import timedelta
+
+from django.conf import settings
+from django.urls import reverse
 from django.utils import timezone
 from django.test.client import Client
 
-from news.models import Comment, News
 import pytest
+
+from news.models import Comment, News
 
 
 TODAY = timezone.now()
@@ -45,6 +48,16 @@ def news():
 
 
 @pytest.fixture
+def news_pk_reverse(news):
+    return reverse('news:detail', args=(news.pk,))
+
+
+@pytest.fixture
+def reverse_news_home():
+    return reverse('news:home')
+
+
+@pytest.fixture
 def news_list():
     all_news = [
         News(
@@ -52,10 +65,9 @@ def news_list():
             text='Просто текст.',
             date=TODAY - timedelta(days=index)
         )
-        for index in range(settings.NEWS_COUNT_ON_HOME_PAGE)
+        for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
     ]
     News.objects.bulk_create(all_news)
-    return News.objects.all()
 
 
 @pytest.fixture
@@ -76,4 +88,13 @@ def comment_list(news, author):
         )
         comment.created = TODAY + timedelta(days=index)
         comment.save()
-    return Comment.objects.all()
+
+
+@pytest.fixture
+def reverse_comment_delete(comment):
+    return reverse('news:delete', kwargs={'pk': comment.pk})
+
+
+@pytest.fixture
+def reverse_comment_edit(comment):
+    return reverse('news:edit', kwargs={'pk': comment.pk})

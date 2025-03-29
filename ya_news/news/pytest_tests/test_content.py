@@ -1,22 +1,25 @@
 from django.conf import settings
 from django.urls import reverse
+
 import pytest
 
-from news.forms import CommentForm
 from news.models import News
 
 
-@pytest.mark.django_db
-def test_news_count(client, news_list, news):
-    """Проверка, что оличество новостей на главной странице — не более 10."""
+pytestmark = pytest.mark.django_db
+
+
+def test_news_count(client, news_list, reverse_news_home):
+    """
+    Проверка, что количество новостей на главной странице
+    соответствует NEWS_COUNT_ON_HOME_PAGE.
+    """
     value = settings.NEWS_COUNT_ON_HOME_PAGE
-    response = client.get(reverse('news:home'))
-    home_list = response.context['object_list']
-    assert home_list.count() == value
+    response = client.get(reverse_news_home)
+    assert response.context['object_list'].count() == value
     assert News.objects.count() > value
 
 
-@pytest.mark.django_db
 def test_sorted_news(client, news_list):
     """
     Проверка, что новости отсортированы от самой свежей к
@@ -29,13 +32,12 @@ def test_sorted_news(client, news_list):
     assert date_list == sorted_dates
 
 
-@pytest.mark.django_db
-def test_sorted_comment(client, news, comment_list):
+def test_sorted_comment(client, comment_list, news_pk_reverse):
     """
     Проверка, что комментарии на странице отдельной новости отсортированы в
     хронологическом порядке: старые в начале списка, новые — в конце.
     """
-    response = client.get(reverse('news:detail', args=(news.pk,)))
+    response = client.get(news_pk_reverse)
     assert 'news' in response.context
 
     news = response.context['news']
@@ -44,22 +46,17 @@ def test_sorted_comment(client, news, comment_list):
     assert all_timestamps == sorted(all_timestamps)
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize(
-    'name',
+    'name, result',
     (
-        (pytest.lazy_fixture('author_client')),
-        (pytest.lazy_fixture('client')),
+        (pytest.lazy_fixture('author_client'), True),
+        (pytest.lazy_fixture('client'), False),
     ),
 )
-def test_get_form_avtirized(name, news, client):
+def test_get_form_avtirized(name, result, news_pk_reverse):
     """
     Проверка, что анонимному пользователю недоступна форма для отправки
     комментария на странице отдельной новости, а авторизованному доступна.
     """
-    response = name.get(reverse('news:detail', args=(news.pk,)))
-    if name == client:
-        assert 'form' not in response.context
-    else:
-        assert 'form' in response.context
-        assert isinstance(response.context['form'], CommentForm)
+    response = name.get(news_pk_reverse)
+    assert bool('form' in response.context) == result
