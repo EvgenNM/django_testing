@@ -41,7 +41,6 @@ def test_comment_create_author_client_and_cant_anonymous(
         assert new_object.news == news
 
 
-
 @pytest.mark.parametrize(
     'name, result',
     (
