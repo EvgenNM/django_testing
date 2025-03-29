@@ -47,7 +47,7 @@ class TestLogic(BaseTestClass):
             self.reverse_url,
             data=self.new_form_data
         )
-    
+
     def create_reader_form_data(self):
         """
         Фикстура создания авторизованным юзером 'Читатель простой' новой
@@ -58,7 +58,7 @@ class TestLogic(BaseTestClass):
             data=self.form_data
         )
         return Note.objects.all().last()
-    
+
     def create_anonimous_form_data(self):
         """
         Фикстура создания анонимным юзером новой заметки с
