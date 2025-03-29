@@ -9,8 +9,6 @@ from pytest_django.asserts import assertRedirects
 pytestmark = pytest.mark.django_db
 
 
-# Если не в том направлении двигаюсь,
-# можно раскрыть шире и детальнее свои желания. Спасибо
 @pytest.mark.parametrize(
     'name',
     (
@@ -68,20 +66,19 @@ def test_update_delete_comment_author(faice, url, result):
 
 
 @pytest.mark.parametrize(
-    'name, args',
+    'name',
     (
-        ('news:delete', pytest.lazy_fixture('comment')),
-        ('news:edit', pytest.lazy_fixture('comment')),
-    ),
+        pytest.lazy_fixture('reverse_comment_delete'),
+        pytest.lazy_fixture('reverse_comment_edit'),
+    )
 )
-def test_redirect_anonimous(name, args, client):
+def test_redirect_anonimous(name, client):
     """
     Проверка, что при попытке перейти на страницу редактирования или
     удаления комментария анонимный пользователь перенаправляется
     на страницу авторизации.
     """
-    url = reverse(name, args=(args.pk,))
-    response = client.get(url)
+    response = client.get(name)
     url_login = reverse('users:login')
-    redirect_url = f'{url_login}?next={url}'
+    redirect_url = f'{url_login}?next={name}'
     assertRedirects(response, redirect_url)

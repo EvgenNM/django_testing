@@ -3,6 +3,7 @@ from django.urls import reverse
 
 import pytest
 
+from news.forms import CommentForm
 from news.models import News
 
 
@@ -20,12 +21,12 @@ def test_news_count(client, news_list, reverse_news_home):
     assert News.objects.count() > value
 
 
-def test_sorted_news(client, news_list):
+def test_sorted_news(client, news_list, reverse_news_home):
     """
     Проверка, что новости отсортированы от самой свежей к
     самой старой. Свежие новости в начале списка.
     """
-    response = client.get(reverse('news:home'))
+    response = client.get(reverse_news_home)
     home_list = response.context['object_list']
     date_list = [news.date for news in home_list]
     sorted_dates = sorted(date_list, reverse=True)
@@ -60,3 +61,5 @@ def test_get_form_avtirized(name, result, news_pk_reverse):
     """
     response = name.get(news_pk_reverse)
     assert bool('form' in response.context) == result
+    if result:
+        assert isinstance(response.context['form'], CommentForm)

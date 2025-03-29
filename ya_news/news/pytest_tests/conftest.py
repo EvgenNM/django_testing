@@ -12,6 +12,7 @@ from news.models import Comment, News
 
 TODAY = timezone.now()
 TEXT_COMMENT = 'Очень хайповый текстище'
+NEW_TEXT_COMMENT = 'Новый текст коментария'
 
 
 @pytest.fixture
