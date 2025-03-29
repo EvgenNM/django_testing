@@ -58,6 +58,13 @@ class TestLogic(BaseTestClass):
             data=self.form_data
         )
         return Note.objects.get(pk=Note.objects.count())
+    
+    def create_anonimous_form_data(self):
+        """
+        Фикстура создания анонимным юзером новой заметки с
+        использованием form_data.
+        """
+        self.client.post(self.reverse_url, data=self.form_data)
 
     def test_create_notes_autorized(self):
         """Проверка, что залогиненный пользователь может создать заметку."""
@@ -73,7 +80,7 @@ class TestLogic(BaseTestClass):
     def test_create_notes_anonimus(self):
         """Проверка, что анонимный пользователь не может создать заметку."""
         count_notes_start = Note.objects.count()
-        self.client.post(self.reverse_url, data=self.form_data)
+        self.create_anonimous_form_data()
         self.assertEqual(Note.objects.count(), count_notes_start)
 
     def test_unique_slug(self):
@@ -103,10 +110,10 @@ class TestLogic(BaseTestClass):
         Проверка, что пользователь может удалять свои заметки и
         не может удалять чужие.
         """
-        not_note_reader = Note.objects.get(pk=Note.objects.count())
+        not_note_reader = Note.objects.all().last()
         self.create_reader_form_data()
         create_count = Note.objects.count()
-        note_reader = Note.objects.get(pk=create_count)
+        note_reader = Note.objects.all().last()
         test_urls = [
             (self.url_delete, not_note_reader.slug, create_count),
             (self.url_delete, note_reader.slug, create_count - 1),
