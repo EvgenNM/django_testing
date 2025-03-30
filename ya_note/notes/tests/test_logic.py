@@ -1,5 +1,4 @@
 from django.urls import reverse
-
 from pytils.translit import slugify
 
 from notes.forms import WARNING
@@ -28,48 +27,15 @@ class TestLogic(BaseTestClass):
             'text': 'Текст измененный',
             'slug': 'Zagolovok-ok'
         }
-        cls.url_edit = 'notes:edit'
-        cls.url_delete = 'notes:delete'
 
-    def create_author_form_date(self):
-        """
-        Фикстура создания авторизованным юзером 'Лев Толстой' новой заметки
-        с использованием form_data
-        """
-        self.author_client.post(self.reverse_url, data=self.form_data)
-
-    def create_author_new_form_data(self):
-        """
-        Фикстура создания авторизованным юзером 'Лев Толстой' новой заметки
-        с использованием new_form_data
-        """
-        return self.author_client.post(
-            self.reverse_url,
-            data=self.new_form_data
-        )
-
-    def create_reader_form_data(self):
-        """
-        Фикстура создания авторизованным юзером 'Читатель простой' новой
-        заметки с использованием form_data
-        """
-        self.reader_client.post(
-            self.reverse_url,
-            data=self.form_data
-        )
-        return Note.objects.all().last()
-
-    def create_anonimous_form_data(self):
-        """
-        Фикстура создания анонимным юзером новой заметки с
-        использованием form_data.
-        """
-        self.client.post(self.reverse_url, data=self.form_data)
+    def create_note(self, author, data):
+        """Фикстура создания авторизованным юзером новой заметки."""
+        return author.post(self.reverse_url, data=data)
 
     def test_create_notes_autorized(self):
         """Проверка, что залогиненный пользователь может создать заметку."""
         Note.objects.all().delete()
-        self.create_author_form_date()
+        self.create_note(self.author_client, self.form_data)
         self.assertEqual(Note.objects.count(), 1)
         note = Note.objects.get()
 
@@ -80,15 +46,15 @@ class TestLogic(BaseTestClass):
     def test_create_notes_anonimus(self):
         """Проверка, что анонимный пользователь не может создать заметку."""
         count_notes_start = Note.objects.count()
-        self.create_anonimous_form_data()
+        self.create_note(self.client, self.form_data)
         self.assertEqual(Note.objects.count(), count_notes_start)
 
     def test_unique_slug(self):
         """Проверка, что невозможно создать две заметки с одинаковым slug."""
         count_notes_start = Note.objects.count()
-        self.create_author_form_date()
+        self.create_note(self.author_client, self.form_data)
         self.assertEqual(Note.objects.count(), count_notes_start + 1)
-        response = self.create_author_new_form_data()
+        response = self.create_note(self.author_client, self.new_form_data)
         self.assertEqual(Note.objects.count(), count_notes_start + 1)
         self.assertFormError(
             response,
@@ -111,7 +77,8 @@ class TestLogic(BaseTestClass):
         не может удалять чужие.
         """
         not_note_reader = Note.objects.all().last()
-        note_reader = self.create_reader_form_data()
+        self.create_note(self.reader_client, self.form_data)
+        note_reader = Note.objects.all().last()
         create_count = Note.objects.count()
         test_urls = [
             (self.url_delete, not_note_reader.slug, create_count),
@@ -126,7 +93,8 @@ class TestLogic(BaseTestClass):
 
     def test_user_can_update_our_notes(self):
         """Проверка, что пользователь может редактировать свои заметки."""
-        note_reader = self.create_reader_form_data()
+        self.create_note(self.reader_client, self.form_data)
+        note_reader = Note.objects.all().last()
         self.reader_client.post(
             reverse(self.url_edit, kwargs={'slug': note_reader.slug}),
             data=self.new_form_data_slug,

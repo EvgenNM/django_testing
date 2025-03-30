@@ -24,26 +24,30 @@ class BaseTestClass(TestCase):
         cls.author_client.force_login(cls.author)
         cls.reader_client = Client()
         cls.reader_client.force_login(cls.reader)
+        cls.reverse_url = reverse('notes:add')
+        cls.login_url_reverse = reverse('users:login')
+        cls.notes_list_reverse = reverse('notes:list')
+        cls.notes_edit = reverse('notes:edit', kwargs={'slug': cls.note.slug})
+        cls.url_edit = 'notes:edit'
+        cls.url_delete = 'notes:delete'
+
         cls.list_urls_note = [
             reverse('notes:detail', args=(cls.note.slug,)),
-            reverse('notes:edit', args=(cls.note.slug,)),
+            cls.notes_edit,
             reverse('notes:delete', args=(cls.note.slug,)),
         ]
         cls.list_urls_for_authorized = [
             reverse('notes:list'),
             reverse('notes:success'),
-            reverse('notes:add'),
+            cls.reverse_url,
         ]
         cls.urls_home_login_logout_signup_reverse = (
             reverse('notes:home'),
-            reverse('users:login'),
+            cls.login_url_reverse,
             reverse('users:logout'),
             reverse('users:signup'),
         )
         cls.url_notes_add_eddit_response = (
-            reverse('notes:add'),
-            reverse('notes:edit', kwargs={'slug': cls.note.slug})
+            cls.reverse_url,
+            cls.notes_edit,
         )
-        cls.reverse_url = reverse('notes:add')
-        cls.login_url_reverse = reverse('users:login')
-        cls.notes_list_reverse = reverse('notes:list')

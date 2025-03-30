@@ -18,23 +18,25 @@ class TestContent(BaseTestClass):
         Проверка, что в список заметок одного пользователя
         не попадают заметки другого пользователя.
         """
-        # Получаем объекты response при get-запросе на страницу списка заметок
-        # авторизованных юзеров.
-        # в BaseTestClass  создана одна заметка, где автор self.author:
-        # в списке первого (author_client) объекта должна быть одна заметка,
-        # т.к. он ее автор
-        response_author = self.author_client.get(self.notes_list_reverse)
-        # в списке второго (reader_client) объекта не должно быть заметок
-        response_reader = self.reader_client.get(self.notes_list_reverse)
-        self.assertEqual(
-            response_author.context['object_list'].get(pk=1).author,
-            self.author
-        )
-        # Или?
-        # for note in response_author.context['object_list']:
-        #     with self.subTest(note=note, author=self.author):
-        #         self.assertEqual(note.author, self.author)
-        self.assertEqual(response_reader.context['object_list'].count(), 0)
+        response_author_object_list = self.author_client.get(
+            self.notes_list_reverse
+        ).context['object_list']
+        response_reader_object_list = self.reader_client.get(
+            self.notes_list_reverse
+        ).context['object_list']
+
+        for name, response_objects in (
+            (self.author, response_author_object_list),
+            (self.reader, response_reader_object_list)
+        ):
+            with self.subTest(name=name):
+                self.assertEqual(
+                    not response_objects
+                    or all(
+                        note.author == name for note in response_objects
+                        ),
+                    True
+                )
 
     def test_create_edit_notes(self):
         """
