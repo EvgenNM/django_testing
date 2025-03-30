@@ -67,28 +67,29 @@ def test_author_can_delete_our_comment_and_cant_other(
         (pytest.lazy_fixture('not_author_client'), TEXT_COMMENT),
     ),
 )
-def test_author_can_edit_our_comment_and_cant_other(name, result, comment):
+def test_author_can_edit_our_comment_and_cant_other(
+    name, result, comment, reverse_comment_edit
+):
     """
     Проверка, что авторизованный пользователь может редактировать свои
     комментарии и не может редактировать чужие.
     """
     new_comment = {'text': NEW_TEXT_COMMENT}
-    name.post(reverse('news:edit', args=(comment.pk,)), data=new_comment)
+    name.post(reverse_comment_edit, data=new_comment)
     new_object = Comment.objects.get(pk=comment.pk)
     assert new_object.text == result
     assert new_object.author == comment.author
     assert new_object.news == comment.news
 
 
-def test_user_cant_use_bad_words(author_client, news):
+def test_user_cant_use_bad_words(author_client, news, news_pk_reverse):
     """
     Проверка, что если комментарий содержит запрещённые слова,
     он не будет опубликован, а форма вернёт ошибку.
     """
     start_comment_count = Comment.objects.count()
-    url = reverse('news:detail', args=(news.pk,))
     text_comment = {'text': f'Коментарий, {BAD_WORDS}!'}
-    response = author_client.post(url, data=text_comment)
+    response = author_client.post(news_pk_reverse, data=text_comment)
     assert start_comment_count == Comment.objects.count()
     assertFormError(
         response,

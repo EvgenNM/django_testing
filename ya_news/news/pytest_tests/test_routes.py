@@ -1,32 +1,11 @@
 from http import HTTPStatus
 
 from django.urls import reverse
-
 import pytest
 from pytest_django.asserts import assertRedirects
 
 
 pytestmark = pytest.mark.django_db
-
-
-@pytest.mark.parametrize(
-    'name',
-    (
-        pytest.lazy_fixture('reverse_news_home'),
-        pytest.lazy_fixture('news_pk_reverse'),
-        reverse('users:login'),
-        reverse('users:logout'),
-        reverse('users:signup'),
-    )
-)
-def test_for_anonymous_user(client, name):
-    """
-    Проверка, что главная страница, страница отдельной новости доступна
-    анонимному пользователю, а также страницы регистрации пользователей,
-    входа в учётную запись и выхода из неё доступны всем пользователям.
-    """
-    response = client.get(name)
-    assert response.status_code == HTTPStatus.OK
 
 
 @pytest.mark.parametrize(
@@ -52,9 +31,34 @@ def test_for_anonymous_user(client, name):
             pytest.lazy_fixture('reverse_comment_delete'),
             HTTPStatus.OK
         ),
+        (
+            pytest.lazy_fixture('client'),
+            pytest.lazy_fixture('reverse_news_home'),
+            HTTPStatus.OK
+        ),
+        (
+            pytest.lazy_fixture('client'),
+            pytest.lazy_fixture('news_pk_reverse'),
+            HTTPStatus.OK
+        ),
+        (
+            pytest.lazy_fixture('client'),
+            reverse('users:login'),
+            HTTPStatus.OK
+        ),
+        (
+            pytest.lazy_fixture('client'),
+            reverse('users:logout'),
+            HTTPStatus.OK
+        ),
+        (
+            pytest.lazy_fixture('client'),
+            reverse('users:signup'),
+            HTTPStatus.OK
+        )
     ),
 )
-def test_update_delete_comment_author(faice, url, result):
+def test_urls_author_not_author_anonimous(faice, url, result):
     """
     Проверка, что страницы удаления и редактирования комментария доступны
     автору комментария, а также что авторизованный пользователь не может зайти
