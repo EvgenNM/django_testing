@@ -49,7 +49,6 @@ class TestLogic(BaseTestClass):
         ]
         return urls
 
-
     def test_create_notes_autorized(self):
         """Проверка, что залогиненный пользователь может создать заметку."""
         Note.objects.all().delete()
