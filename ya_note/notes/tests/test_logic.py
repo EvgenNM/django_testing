@@ -19,8 +19,7 @@ class TestLogic(BaseTestClass):
         }
         cls.new_form_data = {
             'title': 'Заголовок_очередной',
-            'text': 'Текст измененный',
-            'slug': 'Zagolovok'
+            'text': 'Текст измененный'
         }
         cls.new_form_data_slug = {
             'title': 'Заголовок_очередной',
@@ -31,6 +30,25 @@ class TestLogic(BaseTestClass):
     def create_note(self, author, data):
         """Фикстура создания авторизованным юзером новой заметки."""
         return author.post(self.reverse_url, data=data)
+
+    def create_note_duble_slug(self):
+        """
+        Фикстура создания авторизованным юзером новой заметки
+        с уже имеющимся slug.
+        """
+        note = Note.objects.all().last()
+        data = self.form_data
+        data['slug'] = note.slug
+        return self.create_note(self.author_client, data)
+
+    def get_urls_delete_notes(self, *args):
+        """Фикстура получения адресов удаления заметок по переданным slug."""
+        urls = [
+            reverse(self.url_delete, kwargs={'slug': slug})
+            for slug in args
+        ]
+        return urls
+
 
     def test_create_notes_autorized(self):
         """Проверка, что залогиненный пользователь может создать заметку."""
@@ -52,15 +70,13 @@ class TestLogic(BaseTestClass):
     def test_unique_slug(self):
         """Проверка, что невозможно создать две заметки с одинаковым slug."""
         count_notes_start = Note.objects.count()
-        self.create_note(self.author_client, self.form_data)
-        self.assertEqual(Note.objects.count(), count_notes_start + 1)
-        response = self.create_note(self.author_client, self.new_form_data)
-        self.assertEqual(Note.objects.count(), count_notes_start + 1)
+        response = self.create_note_duble_slug()
+        self.assertEqual(Note.objects.count(), count_notes_start)
         self.assertFormError(
             response,
             form='form',
             field='slug',
-            errors=self.new_form_data['slug'] + WARNING
+            errors=self.form_data['slug'] + WARNING
         )
 
     def test_auto_slug(self):
@@ -69,41 +85,36 @@ class TestLogic(BaseTestClass):
         то он формируется автоматически, с помощью функции
         pytils.translit.slugify.
         """
-        self.assertEqual(self.note.slug, slugify(self.note.title))
+        self.create_note(self.author_client, self.new_form_data)
+        note = Note.objects.all().last()
+        self.assertEqual(note.slug, slugify(note.title))
 
     def test_delete_update_our_notes(self):
         """
         Проверка, что пользователь может удалять свои заметки и
         не может удалять чужие.
         """
-        not_note_reader = Note.objects.all().last()
         self.create_note(self.reader_client, self.form_data)
         note_reader = Note.objects.all().last()
         create_count = Note.objects.count()
-        test_urls = [
-            (self.url_delete, not_note_reader.slug, create_count),
-            (self.url_delete, note_reader.slug, create_count - 1),
-        ]
-        for url, slug, result in test_urls:
-            with self.subTest(url=url, slug=slug, result=result):
-                self.reader_client.post(
-                    reverse(url, kwargs={'slug': slug})
-                )
-                self.assertEqual(Note.objects.count(), result)
+        test_count = [create_count, create_count - 1]
+        urls = self.get_urls_delete_notes(self.note.slug, note_reader.slug)
+        for url, count in zip(urls, test_count):
+            with self.subTest(url=url, count=count):
+                self.reader_client.post(url)
+                self.assertEqual(Note.objects.count(), count)
 
     def test_user_can_update_our_notes(self):
         """Проверка, что пользователь может редактировать свои заметки."""
-        self.create_note(self.reader_client, self.form_data)
-        note_reader = Note.objects.all().last()
-        self.reader_client.post(
-            reverse(self.url_edit, kwargs={'slug': note_reader.slug}),
+        self.author_client.post(
+            self.notes_edit,
             data=self.new_form_data_slug,
         )
-        test_object = Note.objects.get(pk=note_reader.pk)
+        test_object = Note.objects.get(pk=self.note.pk)
         test_list = [
             (test_object.text, self.new_form_data_slug['text']),
             (test_object.title, self.new_form_data_slug['title']),
-            (test_object.author, self.reader),
+            (test_object.author, self.author),
             (test_object.slug, self.new_form_data_slug['slug']),
         ]
         for note_value, form_value in test_list:
@@ -118,10 +129,7 @@ class TestLogic(BaseTestClass):
             self.note.author,
             self.note.slug
         )
-        self.reader_client.post(
-            reverse(self.url_edit, kwargs={'slug': self.note.slug}),
-            data=self.new_form_data_slug,
-        )
+        self.reader_client.post(self.notes_edit, data=self.new_form_data_slug)
         test_object = Note.objects.get(pk=self.note.pk)
         test_value_note = (
             test_object.text,
