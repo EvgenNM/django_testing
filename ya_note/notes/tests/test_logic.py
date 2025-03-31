@@ -1,4 +1,3 @@
-from django.urls import reverse
 from pytils.translit import slugify
 
 from notes.forms import WARNING
@@ -81,7 +80,6 @@ class TestLogic(BaseTestClass):
             with self.subTest(url=url, count=count):
                 self.reader_client.post(url)
                 self.assertEqual(Note.objects.count(), count)
-        
 
     def test_user_can_update_our_notes(self):
         """Проверка, что пользователь может редактировать свои заметки."""
