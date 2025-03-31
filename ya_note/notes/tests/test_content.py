@@ -34,7 +34,7 @@ class TestContent(BaseTestClass):
                     not response_objects
                     or all(
                         note.author == name for note in response_objects
-                        ),
+                    ),
                     True
                 )
 
