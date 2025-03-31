@@ -43,7 +43,7 @@ class BaseTestClass(TestCase):
         cls.list_urls_note = [
             reverse('notes:detail', args=(cls.note.slug,)),
             cls.notes_edit,
-            reverse('notes:delete', args=(cls.note.slug,)),
+            cls.delete_note_author,
         ]
         cls.list_urls_for_authorized = [
             reverse('notes:list'),
