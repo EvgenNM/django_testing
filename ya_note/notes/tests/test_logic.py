@@ -37,17 +37,8 @@ class TestLogic(BaseTestClass):
         с уже имеющимся slug.
         """
         note = Note.objects.all().last()
-        data = self.form_data
-        data['slug'] = note.slug
-        return self.create_note(self.author_client, data)
-
-    def get_urls_delete_notes(self, *args):
-        """Фикстура получения адресов удаления заметок по переданным slug."""
-        urls = [
-            reverse(self.url_delete, kwargs={'slug': slug})
-            for slug in args
-        ]
-        return urls
+        self.form_data['slug'] = note.slug
+        return self.create_note(self.author_client, self.form_data)
 
     def test_create_notes_autorized(self):
         """Проверка, что залогиненный пользователь может создать заметку."""
@@ -78,30 +69,19 @@ class TestLogic(BaseTestClass):
             errors=self.form_data['slug'] + WARNING
         )
 
-    def test_auto_slug(self):
-        """
-        Проверка, что если при создании заметки не заполнен slug,
-        то он формируется автоматически, с помощью функции
-        pytils.translit.slugify.
-        """
-        self.create_note(self.author_client, self.new_form_data)
-        note = Note.objects.all().last()
-        self.assertEqual(note.slug, slugify(note.title))
-
     def test_delete_update_our_notes(self):
         """
         Проверка, что пользователь может удалять свои заметки и
         не может удалять чужие.
         """
-        self.create_note(self.reader_client, self.form_data)
-        note_reader = Note.objects.all().last()
         create_count = Note.objects.count()
         test_count = [create_count, create_count - 1]
-        urls = self.get_urls_delete_notes(self.note.slug, note_reader.slug)
+        urls = [self.delete_note_author, self.delete_note_reader]
         for url, count in zip(urls, test_count):
             with self.subTest(url=url, count=count):
                 self.reader_client.post(url)
                 self.assertEqual(Note.objects.count(), count)
+        
 
     def test_user_can_update_our_notes(self):
         """Проверка, что пользователь может редактировать свои заметки."""
@@ -113,7 +93,7 @@ class TestLogic(BaseTestClass):
         test_list = [
             (test_object.text, self.new_form_data_slug['text']),
             (test_object.title, self.new_form_data_slug['title']),
-            (test_object.author, self.author),
+            (test_object.author, self.note.author),
             (test_object.slug, self.new_form_data_slug['slug']),
         ]
         for note_value, form_value in test_list:
@@ -139,3 +119,14 @@ class TestLogic(BaseTestClass):
         for old_value, test_value in zip(old_value_note, test_value_note):
             with self.subTest(old_value=old_value, test_value=test_value):
                 self.assertEqual(old_value, test_value)
+
+    def test_auto_slug(self):
+        """
+        Проверка, что если при создании заметки не заполнен slug,
+        то он формируется автоматически, с помощью функции
+        pytils.translit.slugify.
+        """
+        Note.objects.all().delete()
+        self.create_note(self.author_client, self.new_form_data)
+        note = Note.objects.get()
+        self.assertEqual(note.slug, slugify(note.title))

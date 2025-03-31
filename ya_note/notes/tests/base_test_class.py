@@ -20,6 +20,11 @@ class BaseTestClass(TestCase):
             text='Текст_отличен',
             author=cls.author,
         )
+        cls.note_reader = Note.objects.create(
+            title='Заголовок читателя',
+            text='Текст_середнячковый',
+            author=cls.reader,
+        )
         cls.author_client = Client()
         cls.author_client.force_login(cls.author)
         cls.reader_client = Client()
@@ -28,8 +33,12 @@ class BaseTestClass(TestCase):
         cls.login_url_reverse = reverse('users:login')
         cls.notes_list_reverse = reverse('notes:list')
         cls.notes_edit = reverse('notes:edit', kwargs={'slug': cls.note.slug})
-        cls.url_edit = 'notes:edit'
-        cls.url_delete = 'notes:delete'
+        cls.delete_note_author = reverse(
+            'notes:delete', kwargs={'slug': cls.note.slug}
+        )
+        cls.delete_note_reader = reverse(
+            'notes:delete', kwargs={'slug': cls.note_reader.slug}
+        )
 
         cls.list_urls_note = [
             reverse('notes:detail', args=(cls.note.slug,)),
